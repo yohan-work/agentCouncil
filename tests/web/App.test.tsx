@@ -45,21 +45,27 @@ describe("Run explorer", () => {
     );
   });
 
-  it("loads a run, shows the timeline, and opens the rebuttal detail", async () => {
+  it("loads a run, shows the collaboration board, and opens selected details", async () => {
     render(<App />);
 
     expect((await screen.findAllByText("일부 Figma node를 확인하지 못한 구현 결정")).length).toBeGreaterThan(0);
-    expect(screen.getByText("Execution trace")).toBeTruthy();
-    expect(screen.getByText("5 stages")).toBeTruthy();
+    expect(screen.getByText("Agent collaboration map")).toBeTruthy();
+    expect(screen.getByText("Claim → Rebuttal → Revision")).toBeTruthy();
+    expect(screen.getByText("Current outcome")).toBeTruthy();
 
-    const rebuttalStage = screen.getAllByRole("button").find((button) => button.textContent?.includes("Rebuttal"));
-    expect(rebuttalStage).toBeTruthy();
-    fireEvent.click(rebuttalStage!);
+    const analystButton = screen.getByText("Analyst", { exact: true }).closest("button");
+    expect(analystButton).toBeTruthy();
+    fireEvent.click(analystButton!);
 
     await waitFor(() => {
-      expect(screen.getByText("Falsifier attack")).toBeTruthy();
-      expect(screen.getByText("Strongest counterargument")).toBeTruthy();
+      expect(screen.getByText("Analyst details")).toBeTruthy();
+      expect(screen.getByText("Execution phases")).toBeTruthy();
     });
+
+    const relationshipButton = screen.getByRole("button", { name: /관계 상세 보기/u });
+    fireEvent.click(relationshipButton);
+    expect(screen.getByText("Selected relationship")).toBeTruthy();
+    expect(screen.getByText(/실패 조건:/u)).toBeTruthy();
   });
 
   it("shows an actionable empty state when no artifacts exist", async () => {
