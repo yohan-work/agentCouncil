@@ -1,0 +1,11 @@
+{
+  "name": "@agent-council/providers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@agent-council/shared": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}
