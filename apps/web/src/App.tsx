@@ -10,6 +10,7 @@ import {
   type AgentBoardRun,
   type AgentRelationship,
 } from "./agent-board-model";
+import { buildPixelSceneModel, type PixelSceneModel, type SceneAgent, type SceneObject } from "./pixel-scene-model";
 import {
   buildTimeline,
   formatDuration,
@@ -47,9 +48,7 @@ function EmptyState({ title, description }: { title: string; description: string
 }
 
 function JsonBlock({ value, label }: { value: unknown; label: string }) {
-  if (value === null || value === undefined) {
-    return null;
-  }
+  if (value === null || value === undefined) return null;
   return (
     <details className="json-details">
       <summary>{label}</summary>
@@ -59,18 +58,8 @@ function JsonBlock({ value, label }: { value: unknown; label: string }) {
 }
 
 function PillList({ values, empty = "없음" }: { values: string[]; empty?: string }) {
-  if (values.length === 0) {
-    return <span className="muted">{empty}</span>;
-  }
-  return (
-    <div className="pill-list">
-      {values.map((value) => (
-        <span className="pill" key={value}>
-          {value}
-        </span>
-      ))}
-    </div>
-  );
+  if (values.length === 0) return <span className="muted">{empty}</span>;
+  return <div className="pill-list">{values.map((value) => <span className="pill" key={value}>{value}</span>)}</div>;
 }
 
 function RunSummaryHeader({ summary, artifact, board }: { summary: RunSummary; artifact: CanonicalRunArtifact; board: AgentBoardModel }) {
@@ -100,164 +89,110 @@ function RunSummaryHeader({ summary, artifact, board }: { summary: RunSummary; a
   );
 }
 
-function OutcomeStrip({ board }: { board: AgentBoardModel }) {
-  return (
-    <div className="outcome-strip" aria-label="Run outcome summary">
-      <div className="outcome-mark">↳</div>
-      <div>
-        <span className="section-eyebrow">Current outcome</span>
-        <strong>{board.outcome.finalActionSummary}</strong>
-        <p>반박과 수정이 연결된 Claim을 기준으로 읽습니다. 최종 판단이 아니라 현재까지의 사고 흔적입니다.</p>
-      </div>
-      <div className="outcome-counts">
-        <span><strong>{board.outcome.claimCount}</strong> claims</span>
-        <span><strong>{board.outcome.challengedCount}</strong> challenged</span>
-        <span><strong>{board.outcome.revisedCount}</strong> revised</span>
-      </div>
-    </div>
-  );
+function SceneStatusLabel({ state }: { state: SceneAgent["visualState"] }) {
+  const labels: Record<SceneAgent["visualState"], string> = {
+    idle: "대기",
+    thinking: "생각 중",
+    working: "작업 중",
+    challenging: "반증 중",
+    revising: "수정 중",
+    succeeded: "완료",
+    failed: "오류",
+    not_started: "미실행",
+  };
+  return <span>{labels[state]}</span>;
 }
 
-function ProblemCard({ board }: { board: AgentBoardModel }) {
-  const { problem } = board;
-  return (
-    <section className="problem-card" aria-labelledby="problem-title">
-      <div className="problem-card-head">
-        <div>
-          <span className="section-eyebrow">Central problem</span>
-          <h2 id="problem-title">{problem.title}</h2>
-        </div>
-        <span className="problem-id">{problem.id}</span>
-      </div>
-      <p className="problem-copy">{problem.problem}</p>
-      <div className="context-callout">
-        <span className="field-label">Context</span>
-        <p>{problem.context}</p>
-      </div>
-      <div className="problem-fields">
-        <div>
-          <span className="field-label">Goals</span>
-          <PillList values={problem.goals} />
-        </div>
-        <div>
-          <span className="field-label">Constraints</span>
-          <PillList values={problem.constraints} />
-        </div>
-      </div>
-      <OutcomeStrip board={board} />
-    </section>
-  );
-}
-
-function AgentCard({ agent, selected, onSelect }: { agent: AgentBoardAgent; selected: boolean; onSelect: () => void }) {
+function SceneAgentButton({ agent, selected, onSelect }: { agent: SceneAgent; selected: boolean; onSelect: () => void }) {
   return (
     <button
-      className={`agent-card agent-${agent.metadata.accent} ${selected ? "is-selected" : ""}`}
+      className={`scene-agent scene-agent-${agent.accent} scene-state-${agent.visualState} ${selected ? "is-selected" : ""}`}
+      style={{ left: `${agent.position.x}%`, top: `${agent.position.y}%` }}
       onClick={onSelect}
       aria-pressed={selected}
+      aria-label={`${agent.displayName}, ${agent.role}, 상태 ${agent.visualState}`}
+      data-scene-state={agent.visualState}
       type="button"
     >
-      <span className="agent-card-head">
-        <span className="agent-avatar" aria-hidden="true">{agent.metadata.icon}</span>
-        <span className="agent-card-title">
-          <span className="section-eyebrow">{agent.metadata.role}</span>
-          <strong>{agent.metadata.displayName}</strong>
-        </span>
-        <Badge status={agent.status} />
-      </span>
-      <span className="agent-summary">{agent.summary}</span>
-      <span className="agent-stat-row">
-        <span><strong>{agent.claims.filter((claim) => claim.parentClaimId === null).length}</strong> Claim</span>
-        <span><strong>{agent.rebuttals.length}</strong> 반박</span>
-        <span><strong>{agent.revisions.length}</strong> 수정</span>
-      </span>
-      <span className="agent-phase-list">
-        {agent.runs.length > 0 ? agent.runs.map((run) => <span className="phase-chip" key={run.id}>{run.phaseLabel}</span>) : <span className="phase-chip phase-muted">실행 기록 없음</span>}
-      </span>
-      <span className="agent-card-hint">선택하여 역할과 실행 결과 보기 <span aria-hidden="true">→</span></span>
+      <span className="scene-agent-shadow" aria-hidden="true" />
+      <img src={`/scene/agents/${agent.id}.png`} alt="" className="scene-agent-sprite" draggable="false" />
+      <span className="scene-agent-nameplate"><strong>{agent.displayName}</strong><small>{agent.role}</small></span>
+      <span className="scene-agent-status"><i aria-hidden="true" /><SceneStatusLabel state={agent.visualState} /></span>
+      <span className="scene-speech" role="status">{agent.speech}</span>
     </button>
   );
 }
 
-function RelationStep({ label, className, title, text, empty, status }: {
-  label: string;
-  className: string;
-  title?: string;
-  text?: string;
-  empty?: string;
-  status?: string;
+function sceneObjectLabel(object: SceneObject): string {
+  return `${object.kind} ${object.title}: ${object.text}`;
+}
+
+function SceneObjectButton({ object, selected, onSelect }: { object: SceneObject; selected: boolean; onSelect: () => void }) {
+  if (object.kind === "problem") {
+    return (
+      <button className={`scene-object scene-problem-object ${selected ? "is-selected" : ""}`} style={{ left: `${object.position.x}%`, top: `${object.position.y}%` }} onClick={onSelect} aria-pressed={selected} aria-label={sceneObjectLabel(object)} type="button">
+        <span className="scene-object-pin" aria-hidden="true">✦</span>
+        <span className="scene-object-kicker">현재 문제</span>
+        <strong>{object.title}</strong>
+        <span>{object.text}</span>
+      </button>
+    );
+  }
+  const icon = object.kind === "claim" ? "C" : object.kind === "rebuttal" ? "!" : object.kind === "revision" ? "↻" : "⚠";
+  return (
+    <button className={`scene-object scene-document scene-document-${object.kind} scene-emphasis-${object.emphasis} ${selected ? "is-selected" : ""}`} style={{ left: `${object.position.x}%`, top: `${object.position.y}%` }} onClick={onSelect} aria-pressed={selected} aria-label={sceneObjectLabel(object)} type="button">
+      <span className="scene-document-icon" aria-hidden="true">{icon}</span>
+      <span className="scene-document-copy"><strong>{object.title}</strong><span>{object.text}</span></span>
+    </button>
+  );
+}
+
+function SceneRelationshipLayer({ scene, selectedRelationshipId }: { scene: PixelSceneModel; selectedRelationshipId: string | null }) {
+  const selected = scene.relationships.find((relationship) => relationship.id === selectedRelationshipId);
+  if (!selected) return null;
+  const objectById = new Map(scene.objects.map((object) => [object.id, object]));
+  const claim = objectById.get(selected.claimObjectId);
+  const rebuttal = objectById.get(selected.rebuttalObjectId);
+  const revision = objectById.get(selected.revisionObjectId);
+  if (!claim || !rebuttal || !revision) return null;
+  return (
+    <svg className="scene-relationship-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs><marker id="scene-arrow" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"><path d="M0,0 L4,2 L0,4 z" /></marker></defs>
+      <path className="scene-relationship-path" d={`M ${claim.position.x} ${claim.position.y} C ${claim.position.x + 4} ${claim.position.y - 3}, ${rebuttal.position.x - 4} ${rebuttal.position.y - 3}, ${rebuttal.position.x} ${rebuttal.position.y}`} markerEnd="url(#scene-arrow)" />
+      <path className="scene-relationship-path scene-relationship-path-revision" d={`M ${rebuttal.position.x} ${rebuttal.position.y} C ${rebuttal.position.x + 4} ${rebuttal.position.y - 3}, ${revision.position.x - 4} ${revision.position.y - 3}, ${revision.position.x} ${revision.position.y}`} markerEnd="url(#scene-arrow)" />
+    </svg>
+  );
+}
+
+function PixelScene({ scene, selectedAgentId, selectedObjectId, selectedRelationshipId, onAgentSelect, onObjectSelect }: {
+  scene: PixelSceneModel;
+  selectedAgentId: string | null;
+  selectedObjectId: string | null;
+  selectedRelationshipId: string | null;
+  onAgentSelect: (agent: SceneAgent) => void;
+  onObjectSelect: (object: SceneObject) => void;
 }) {
   return (
-    <span className={`relation-step ${className}`}>
-      <span className="relation-label">{label}</span>
-      {title ? <strong>{title}</strong> : <strong className="relation-empty">{empty}</strong>}
-      {text ? <span className="relation-text">{text}</span> : null}
-      {status ? <Badge status={status} /> : null}
-    </span>
-  );
-}
-
-function RelationshipCard({ relationship, selected, onSelect }: { relationship: AgentRelationship; selected: boolean; onSelect: () => void }) {
-  const claim = relationship.claim;
-  const rebuttal = relationship.rebuttal;
-  const revision = relationship.revision;
-  return (
-    <button className={`relationship-card ${selected ? "is-selected" : ""}`} onClick={onSelect} aria-pressed={selected} type="button">
-      <span className="relationship-id">{claim?.id ?? "연결되지 않은 기록"}</span>
-      <span className="relation-track">
-        <RelationStep label="Claim" className="relation-claim" title={claim?.text} empty="Claim 없음" text={claim?.rationale} status={claim?.status} />
-        <span className="relation-arrow" aria-hidden="true">→</span>
-        <RelationStep label="Rebuttal" className="relation-rebuttal" title={rebuttal ? `severity ${rebuttal.severity}` : undefined} empty="반박 없음" text={rebuttal?.strongestCounterargument} status={rebuttal?.severity} />
-        <span className="relation-arrow" aria-hidden="true">→</span>
-        <RelationStep label="Revision" className="relation-revision" title={revision?.action} empty="수정 없음" text={revision?.after?.text ?? revision?.rationale} status={revision ? "revised" : undefined} />
-      </span>
-      {relationship.missingReferences.length > 0 ? <span className="relationship-warning">연결 확인 필요 · {relationship.missingReferences.join(", ")}</span> : null}
-      <span className="relationship-hint">관계 상세 보기 <span aria-hidden="true">↗</span></span>
-    </button>
-  );
-}
-
-function RelationshipBoard({ board, selectedRelationshipId, onSelect }: { board: AgentBoardModel; selectedRelationshipId: string | null; onSelect: (relationshipId: string) => void }) {
-  return (
-    <section className="relationship-board" aria-labelledby="relationship-title">
-      <div className="section-heading-row">
-        <div>
-          <span className="section-eyebrow">Reasoning relationships</span>
-          <h2 id="relationship-title">Claim → Rebuttal → Revision</h2>
-        </div>
-        <span className="section-count">{board.relationships.length} links</span>
+    <section className="pixel-scene-shell" aria-labelledby="scene-title">
+      <div className="scene-heading">
+        <div><span className="section-eyebrow">Living agent room</span><h2 id="scene-title">Council floor</h2><p>캐릭터를 클릭하면 지금 어떤 사고를 하고 있는지 확인할 수 있습니다.</p></div>
+        <div className="scene-legend" aria-label="Agent scene legend"><span><i className="scene-legend-dot scene-legend-blue" />분석·수정</span><span><i className="scene-legend-dot scene-legend-red" />반증·경고</span><span><i className="scene-legend-dot scene-legend-gold" />문서·관계</span></div>
       </div>
-      <p className="section-intro">중앙 문제에 대한 주장이 어떻게 공격받고, 어떤 조건으로 바뀌었는지 한 줄씩 추적합니다.</p>
-      {board.relationships.length > 0 ? (
-        <div className="relationship-list">
-          {board.relationships.map((relationship) => (
-            <RelationshipCard
-              key={relationship.id}
-              relationship={relationship}
-              selected={relationship.id === selectedRelationshipId}
-              onSelect={() => onSelect(relationship.id)}
-            />
-          ))}
+      <div className="pixel-scene" data-testid="pixel-scene">
+        <img className="pixel-scene-background" src="/scene/background/council-room.png" alt="픽셀 아트 Agent Council 협업실" draggable="false" />
+        <div className="scene-grid-overlay" aria-hidden="true" />
+        <SceneRelationshipLayer scene={scene} selectedRelationshipId={selectedRelationshipId} />
+        <div className="scene-object-layer">
+          {scene.objects.map((object) => <SceneObjectButton key={object.id} object={object} selected={selectedObjectId === object.id || selectedRelationshipId === object.relatedRelationshipId} onSelect={() => onObjectSelect(object)} />)}
         </div>
-      ) : (
-        <div className="inline-empty">아직 Claim 관계가 생성되지 않았습니다.</div>
-      )}
-      {board.warnings.length > 0 ? (
-        <div className="warning-list" role="status">
-          {board.warnings.map((warning) => <span key={warning}>⚠ {warning}</span>)}
+        <div className="scene-agent-layer">
+          {scene.agents.map((agent) => <SceneAgentButton key={agent.id} agent={agent} selected={selectedAgentId === agent.id} onSelect={() => onAgentSelect(agent)} />)}
         </div>
-      ) : null}
+        <div className="scene-sign scene-sign-analyst">ANALYST DESK</div>
+        <div className="scene-sign scene-sign-falsifier">FALSIFIER DESK</div>
+        <div className="scene-floor-note">클릭해서 조사</div>
+      </div>
     </section>
-  );
-}
-
-function BoardLegend() {
-  return (
-    <div className="board-legend" aria-label="Board legend">
-      <span><i className="legend-dot legend-blue" />구조화 / 수정</span>
-      <span><i className="legend-dot legend-red" />반증 / 공격</span>
-      <span><i className="legend-dot legend-purple" />연결된 관계</span>
-    </div>
   );
 }
 
@@ -269,11 +204,7 @@ function AgentRunRow({ run }: { run: AgentBoardRun }) {
         <span className="run-row-meta"><Badge status={run.status} /><span>{formatDuration(run.durationMs)}</span></span>
       </summary>
       <div className="run-row-details">
-        <div className="run-detail-metrics">
-          <Metric label="Attempts" value={String(run.attempts)} />
-          <Metric label="Tokens" value={formatTokens(run.inputTokens, run.outputTokens)} />
-          <Metric label="Round" value={run.roundId} />
-        </div>
+        <div className="run-detail-metrics"><Metric label="Attempts" value={String(run.attempts)} /><Metric label="Tokens" value={formatTokens(run.inputTokens, run.outputTokens)} /><Metric label="Round" value={run.roundId} /></div>
         {run.errorMessage ? <div className="error-box"><strong>실패</strong><span>{run.errorMessage}</span></div> : null}
         <JsonBlock value={run.validatedOutput} label="Validated output JSON" />
         {run.rawOutput ? <JsonBlock value={run.rawOutput} label="Raw model output" /> : null}
@@ -282,17 +213,22 @@ function AgentRunRow({ run }: { run: AgentBoardRun }) {
   );
 }
 
-function AgentDetailPanel({ agent, relationship }: { agent: AgentBoardAgent | null; relationship: AgentRelationship | null }) {
+function ProblemInspector({ board }: { board: AgentBoardModel }) {
+  return (
+    <section className="inspector-panel inspector-scene" aria-labelledby="inspector-title">
+      <div className="inspector-head"><div><span className="section-eyebrow">Selected object · central problem</span><h2 id="inspector-title">{board.problem.title}</h2></div><span className="inspector-icon">✦</span></div>
+      <p className="inspector-purpose">{board.problem.problem}</p>
+      <div className="inspector-columns"><div><span className="field-label">Goals</span><PillList values={board.problem.goals} /></div><div><span className="field-label">Constraints</span><PillList values={board.problem.constraints} /></div></div>
+      <div className="inspector-block inspector-claim"><span className="field-label">Context</span><p>{board.problem.context}</p></div>
+    </section>
+  );
+}
+
+function SceneInspector({ board, agent, relationship, object }: { board: AgentBoardModel; agent: AgentBoardAgent | null; relationship: AgentRelationship | null; object: SceneObject | null }) {
   if (relationship) {
     return (
-      <section className="inspector-panel" aria-labelledby="inspector-title">
-        <div className="inspector-head">
-          <div>
-            <span className="section-eyebrow">Selected relationship</span>
-            <h2 id="inspector-title">Claim → Rebuttal → Revision</h2>
-          </div>
-          <span className="inspector-icon">↗</span>
-        </div>
+      <section className="inspector-panel inspector-scene" aria-labelledby="inspector-title">
+        <div className="inspector-head"><div><span className="section-eyebrow">Selected relationship</span><h2 id="inspector-title">Claim → Rebuttal → Revision</h2></div><span className="inspector-icon">↗</span></div>
         <div className="inspector-flow">
           <div className="inspector-block inspector-claim"><span className="field-label">Claim · {relationship.claim?.id ?? "missing"}</span><p>{relationship.claim?.text ?? "연결된 Claim을 찾을 수 없습니다."}</p></div>
           <div className="inspector-block inspector-rebuttal"><span className="field-label">Rebuttal · {relationship.rebuttal?.severity ?? "missing"}</span><p>{relationship.rebuttal?.strongestCounterargument ?? "연결된 반박이 없습니다."}</p>{relationship.rebuttal ? <small>실패 조건: {relationship.rebuttal.failureScenario}</small> : null}</div>
@@ -302,41 +238,17 @@ function AgentDetailPanel({ agent, relationship }: { agent: AgentBoardAgent | nu
       </section>
     );
   }
-
+  if (object?.kind === "problem") return <ProblemInspector board={board} />;
   if (!agent) {
-    return (
-      <section className="inspector-panel inspector-empty" aria-labelledby="inspector-title">
-        <div className="inspector-icon">◎</div>
-        <span className="section-eyebrow">Inspector</span>
-        <h2 id="inspector-title">Agent를 선택해 보세요</h2>
-        <p>왼쪽 Analyst 또는 오른쪽 Falsifier를 선택하면 역할, 실행 단계, 검증된 output을 확인할 수 있습니다.</p>
-      </section>
-    );
+    return <section className="inspector-panel inspector-empty" aria-labelledby="inspector-title"><div className="inspector-icon">◎</div><span className="section-eyebrow">Inspector</span><h2 id="inspector-title">캐릭터를 선택해 보세요</h2><p>씬 안의 Analyst 또는 Falsifier를 클릭하면 역할, 실행 단계, 검증된 output이 이곳에 나타납니다.</p></section>;
   }
-
   return (
     <section className={`inspector-panel inspector-${agent.metadata.accent}`} aria-labelledby="inspector-title">
-      <div className="inspector-head">
-        <div>
-          <span className="section-eyebrow">Selected agent · {agent.metadata.role}</span>
-          <h2 id="inspector-title">{agent.metadata.displayName} details</h2>
-        </div>
-        <span className="agent-avatar inspector-avatar">{agent.metadata.icon}</span>
-      </div>
+      <div className="inspector-head"><div><span className="section-eyebrow">Selected agent · {agent.metadata.role}</span><h2 id="inspector-title">{agent.metadata.displayName} details</h2></div><span className="agent-avatar inspector-avatar">{agent.metadata.icon}</span></div>
       <p className="inspector-purpose">{agent.metadata.purpose}</p>
-      <div className="inspector-columns">
-        <div><span className="field-label">Responsibilities</span><PillList values={agent.metadata.responsibilities} /></div>
-        <div><span className="field-label">Non-goals</span><PillList values={agent.metadata.nonGoals} /></div>
-      </div>
-      <div className="inspector-stat-grid">
-        <Metric label="Status" value={statusLabel(agent.status)} />
-        <Metric label="Agent runs" value={String(agent.runs.length)} />
-        <Metric label="Records" value={`${agent.claims.length + agent.rebuttals.length + agent.revisions.length}`} detail="claims · rebuttals · revisions" />
-      </div>
-      <div className="agent-run-list">
-        <span className="field-label">Execution phases</span>
-        {agent.runs.length > 0 ? agent.runs.map((run) => <AgentRunRow key={run.id} run={run} />) : <p className="muted">실행 기록이 없습니다.</p>}
-      </div>
+      <div className="inspector-columns"><div><span className="field-label">Responsibilities</span><PillList values={agent.metadata.responsibilities} /></div><div><span className="field-label">Non-goals</span><PillList values={agent.metadata.nonGoals} /></div></div>
+      <div className="inspector-stat-grid"><Metric label="Status" value={statusLabel(agent.status)} /><Metric label="Agent runs" value={String(agent.runs.length)} /><Metric label="Records" value={`${agent.claims.length + agent.rebuttals.length + agent.revisions.length}`} detail="claims · rebuttals · revisions" /></div>
+      <div className="agent-run-list"><span className="field-label">Execution phases</span>{agent.runs.length > 0 ? agent.runs.map((run) => <AgentRunRow key={run.id} run={run} />) : <p className="muted">실행 기록이 없습니다.</p>}</div>
     </section>
   );
 }
@@ -344,45 +256,14 @@ function AgentDetailPanel({ agent, relationship }: { agent: AgentBoardAgent | nu
 function ExecutionDetails({ artifact, timeline }: { artifact: CanonicalRunArtifact; timeline: TimelineItem[] }) {
   return (
     <details className="execution-details">
-      <summary>
-        <span><span className="section-eyebrow">Secondary view</span><strong>Execution details</strong></span>
-        <span className="section-count">{timeline.length} stages · {artifact.traceEvents.length} events</span>
-      </summary>
-      <div className="execution-body">
-        <div className="execution-list">
-          {timeline.map((item) => (
-            <div className="execution-row" key={item.round.id}>
-              <span className="execution-index">{String(item.round.index + 1).padStart(2, "0")}</span>
-              <span className="execution-name"><strong>{roundLabels[item.round.kind]}</strong><small>{item.agentRuns.map((run) => run.agentId).join(" · ") || "normalized record"}</small></span>
-              <Badge status={item.round.status} />
-              <span className="muted">{formatTimestamp(item.round.completedAt)}</span>
-            </div>
-          ))}
-        </div>
-        <div className="trace-list">
-          <span className="field-label">Trace events</span>
-          {artifact.traceEvents.map((event) => (
-            <div className="trace-row" key={event.id}>
-              <span className="trace-sequence">{String(event.sequence).padStart(2, "0")}</span>
-              <span className="trace-type">{event.type}</span>
-              <span className="muted">{formatTimestamp(event.timestamp)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <summary><span><span className="section-eyebrow">Secondary view</span><strong>Execution details</strong></span><span className="section-count">{timeline.length} stages · {artifact.traceEvents.length} events</span></summary>
+      <div className="execution-body"><div className="execution-list">{timeline.map((item) => <div className="execution-row" key={item.round.id}><span className="execution-index">{String(item.round.index + 1).padStart(2, "0")}</span><span className="execution-name"><strong>{roundLabels[item.round.kind]}</strong><small>{item.agentRuns.map((run) => run.agentId).join(" · ") || "normalized record"}</small></span><Badge status={item.round.status} /><span className="muted">{formatTimestamp(item.round.completedAt)}</span></div>)}</div><div className="trace-list"><span className="field-label">Trace events</span>{artifact.traceEvents.map((event) => <div className="trace-row" key={event.id}><span className="trace-sequence">{String(event.sequence).padStart(2, "0")}</span><span className="trace-type">{event.type}</span><span className="muted">{formatTimestamp(event.timestamp)}</span></div>)}</div></div>
     </details>
   );
 }
 
 function RunSelector({ runs, selectedRunId, onSelect }: { runs: RunSummary[]; selectedRunId: string | null; onSelect: (runId: string) => void }) {
-  return (
-    <label className="run-selector">
-      <span className="section-eyebrow">Loaded runs</span>
-      <select value={selectedRunId ?? ""} onChange={(event) => onSelect(event.target.value)}>
-        {runs.map((run) => <option key={run.runId} value={run.runId}>{run.title} · {run.provider}</option>)}
-      </select>
-    </label>
-  );
+  return <label className="run-selector"><span className="section-eyebrow">Loaded runs</span><select value={selectedRunId ?? ""} onChange={(event) => onSelect(event.target.value)}>{runs.map((run) => <option key={run.runId} value={run.runId}>{run.title} · {run.provider}</option>)}</select></label>;
 }
 
 export default function App() {
@@ -391,6 +272,7 @@ export default function App() {
   const [artifact, setArtifact] = useState<CanonicalRunArtifact | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedRelationshipId, setSelectedRelationshipId] = useState<string | null>(null);
+  const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [loadingRuns, setLoadingRuns] = useState(true);
   const [loadingArtifact, setLoadingArtifact] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -409,97 +291,54 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    void refreshRuns();
-  }, []);
+  useEffect(() => { void refreshRuns(); }, []);
 
   useEffect(() => {
     if (!selectedRunId) {
       setArtifact(null);
       setSelectedAgentId(null);
       setSelectedRelationshipId(null);
+      setSelectedObjectId(null);
       return;
     }
     let cancelled = false;
     setLoadingArtifact(true);
     setError(null);
-    void loadRunArtifact(selectedRunId)
-      .then((nextArtifact) => {
-        if (cancelled) return;
-        setArtifact(nextArtifact);
-        setSelectedAgentId(null);
-        setSelectedRelationshipId(null);
-      })
-      .catch((cause: unknown) => {
-        if (!cancelled) {
-          setArtifact(null);
-          setError(cause instanceof Error ? cause.message : String(cause));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingArtifact(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    void loadRunArtifact(selectedRunId).then((nextArtifact) => {
+      if (cancelled) return;
+      setArtifact(nextArtifact);
+      setSelectedAgentId(null);
+      setSelectedRelationshipId(null);
+      setSelectedObjectId(null);
+    }).catch((cause: unknown) => {
+      if (!cancelled) {
+        setArtifact(null);
+        setError(cause instanceof Error ? cause.message : String(cause));
+      }
+    }).finally(() => {
+      if (!cancelled) setLoadingArtifact(false);
+    });
+    return () => { cancelled = true; };
   }, [selectedRunId]);
 
   const board = useMemo(() => (artifact ? buildAgentBoardModel(artifact) : null), [artifact]);
+  const scene = useMemo(() => (board ? buildPixelSceneModel(board) : null), [board]);
   const timeline = useMemo(() => (artifact ? buildTimeline(artifact) : []), [artifact]);
   const selectedSummary = runs.find((run) => run.runId === selectedRunId);
   const selectedAgent = board?.agents.find((agent) => agent.id === selectedAgentId) ?? null;
   const selectedRelationship = board?.relationships.find((relationship) => relationship.id === selectedRelationshipId) ?? null;
-  const analyst = board?.agents.find((agent) => agent.id === "analyst");
-  const falsifier = board?.agents.find((agent) => agent.id === "falsifier");
-  const otherAgents = board?.agents.filter((agent) => agent.id !== "analyst" && agent.id !== "falsifier") ?? [];
+  const selectedObject = scene?.objects.find((object) => object.id === selectedObjectId) ?? null;
 
   return (
     <div className="app-shell">
-      <div className="topbar">
-        <div className="brand-lockup">
-          <span className="brand-mark">AC</span>
-          <div><strong>Agent Council</strong><span>Local collaboration board</span></div>
-        </div>
-        <div className="topbar-actions">
-          {runs.length > 0 ? <RunSelector runs={runs} selectedRunId={selectedRunId} onSelect={setSelectedRunId} /> : null}
-          <button className="refresh-button" onClick={() => void refreshRuns()} disabled={loadingRuns}>{loadingRuns ? "Loading…" : "Refresh"}</button>
-        </div>
-      </div>
-
+      <div className="topbar"><div className="brand-lockup"><span className="brand-mark">AC</span><div><strong>Agent Council</strong><span>Living collaboration room</span></div></div><div className="topbar-actions">{runs.length > 0 ? <RunSelector runs={runs} selectedRunId={selectedRunId} onSelect={setSelectedRunId} /> : null}<button className="refresh-button" onClick={() => void refreshRuns()} disabled={loadingRuns}>{loadingRuns ? "Loading…" : "Refresh"}</button></div></div>
       {error ? <div className="global-error" role="alert"><strong>Artifact를 불러오지 못했습니다.</strong><span>{error}</span></div> : null}
-
-      {loadingRuns && runs.length === 0 ? (
-        <EmptyState title="Loading local runs" description="artifacts/runs의 canonical JSON을 읽고 있습니다." />
-      ) : runs.length === 0 ? (
-        <EmptyState title="아직 실행 결과가 없습니다" description="먼저 `pnpm run council run --scenario ...`을 실행하면 이 화면에서 확인할 수 있습니다." />
-      ) : loadingArtifact || !artifact || !selectedSummary || !board ? (
-        <div className="loading-state">선택한 Run artifact를 불러오는 중…</div>
-      ) : (
+      {loadingRuns && runs.length === 0 ? <EmptyState title="Loading local runs" description="artifacts/runs의 canonical JSON을 읽고 있습니다." /> : runs.length === 0 ? <EmptyState title="아직 실행 결과가 없습니다" description="먼저 `pnpm run council run --scenario ...`을 실행하면 이 화면에서 확인할 수 있습니다." /> : loadingArtifact || !artifact || !selectedSummary || !board || !scene ? <div className="loading-state">선택한 Run artifact를 불러오는 중…</div> : (
         <main className="workspace">
           <RunSummaryHeader summary={selectedSummary} artifact={artifact} board={board} />
-          <div className="board-intro">
-            <div><span className="section-eyebrow">Agent collaboration map</span><h2>문제를 누가 어떻게 밀어붙였는가</h2><p>요약을 먼저 읽고, Agent 또는 관계를 선택해 근거와 실행 output을 펼쳐보세요.</p></div>
-            <BoardLegend />
-          </div>
-          <div className="agent-board">
-            <div className="agent-lane lane-analyst">
-              {analyst ? <AgentCard agent={analyst} selected={selectedAgentId === analyst.id} onSelect={() => { setSelectedAgentId(analyst.id); setSelectedRelationshipId(null); }} /> : <div className="lane-empty">이 실행에는 Analyst 기록이 없습니다.</div>}
-              <span className="lane-caption">분석 → 수정</span>
-            </div>
-            <div className="board-center">
-              <ProblemCard board={board} />
-              <RelationshipBoard board={board} selectedRelationshipId={selectedRelationshipId} onSelect={(relationshipId) => { setSelectedRelationshipId(relationshipId); setSelectedAgentId(null); }} />
-            </div>
-            <div className="agent-lane lane-falsifier">
-              {falsifier ? <AgentCard agent={falsifier} selected={selectedAgentId === falsifier.id} onSelect={() => { setSelectedAgentId(falsifier.id); setSelectedRelationshipId(null); }} /> : <div className="lane-empty">이 실행에는 Falsifier 기록이 없습니다.</div>}
-              <span className="lane-caption">반증 → 실패 조건</span>
-            </div>
-          </div>
-          {otherAgents.length > 0 ? <div className="other-agents"><span className="section-eyebrow">Additional agents in this run</span><div>{otherAgents.map((agent) => <AgentCard key={agent.id} agent={agent} selected={selectedAgentId === agent.id} onSelect={() => { setSelectedAgentId(agent.id); setSelectedRelationshipId(null); }} />)}</div></div> : null}
-          <div className="lower-grid">
-            <AgentDetailPanel agent={selectedAgent} relationship={selectedRelationship} />
-            <ExecutionDetails artifact={artifact} timeline={timeline} />
-          </div>
+          <div className="scene-intro"><div><span className="section-eyebrow">Agent metaverse board</span><h2>Agent들이 문제를 풀고 있는 현장</h2><p>실행된 Agent만 공간에 등장하며, 상태에 따라 작업·반증·수정 모습이 달라집니다.</p></div><div className="scene-live-key"><span><i className="scene-pulse-dot" />artifact snapshot</span><span>{scene.agents.length} agents · {scene.relationships.length} relationships</span></div></div>
+          <PixelScene scene={scene} selectedAgentId={selectedAgentId} selectedObjectId={selectedObjectId} selectedRelationshipId={selectedRelationshipId} onAgentSelect={(agent) => { setSelectedAgentId(agent.id); setSelectedRelationshipId(null); setSelectedObjectId(null); }} onObjectSelect={(object) => { setSelectedObjectId(object.id); if (object.relatedRelationshipId) { setSelectedRelationshipId(object.relatedRelationshipId); setSelectedAgentId(null); } else { setSelectedRelationshipId(null); setSelectedAgentId(null); } }} />
+          <div className="lower-grid"><SceneInspector board={board} agent={selectedAgent} relationship={selectedRelationship} object={selectedObject} /><ExecutionDetails artifact={artifact} timeline={timeline} /></div>
         </main>
       )}
     </div>
