@@ -3,6 +3,8 @@
 node_modules/
 .pnpm-store/
 dist/
+output/
+.playwright-cli/
 coverage/
 .agent-council/
 artifacts/runs/*.json

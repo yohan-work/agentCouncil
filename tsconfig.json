@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@agent-council/shared": ["packages/shared/src/index.ts"],
+      "@agent-council/shared/browser": ["packages/shared/src/browser.ts"],
+      "@agent-council/shared/domain": ["packages/shared/src/domain.ts"],
       "@agent-council/agents": ["packages/agents/src/index.ts"],
       "@agent-council/providers": ["packages/providers/src/index.ts"],
       "@agent-council/database": ["packages/database/src/index.ts"],
@@ -24,6 +27,6 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["apps/**/*.ts", "packages/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "drizzle.config.ts"],
+  "include": ["apps/**/*.ts", "apps/**/*.tsx", "packages/**/*.ts", "tests/**/*.ts", "tests/**/*.tsx", "vitest.config.ts", "drizzle.config.ts"],
   "exclude": ["dist", "node_modules", "refer"]
 }
