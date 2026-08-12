@@ -1,0 +1,23 @@
+{
+  "scannedAt": "2026-08-12",
+  "fontStack": {
+    "value": "Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+    "source": "apps/web/src/styles.css:2"
+  },
+  "palette": {
+    "value": "named CSS variables with blue/red/purple role colors",
+    "source": "apps/web/src/styles.css:7-26"
+  },
+  "motion": {
+    "value": "motion-cut; no animation library detected",
+    "source": "package.json:33-52"
+  },
+  "spacing": {
+    "value": "ad hoc spacing; scene adds named 4pt tokens",
+    "source": "apps/web/src/styles.css:1-26"
+  },
+  "framework": {
+    "value": "React 19 + Vite",
+    "source": "apps/web/package.json:1-31"
+  }
+}
