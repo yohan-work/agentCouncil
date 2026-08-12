@@ -45,24 +45,23 @@ describe("Run explorer", () => {
     );
   });
 
-  it("loads a run, shows the collaboration board, and opens selected details", async () => {
+  it("loads a run, shows the pixel scene, and opens selected details", async () => {
     render(<App />);
 
     expect((await screen.findAllByText("일부 Figma node를 확인하지 못한 구현 결정")).length).toBeGreaterThan(0);
-    expect(screen.getByText("Agent collaboration map")).toBeTruthy();
-    expect(screen.getByText("Claim → Rebuttal → Revision")).toBeTruthy();
-    expect(screen.getByText("Current outcome")).toBeTruthy();
+    expect(screen.getByTestId("pixel-scene")).toBeTruthy();
+    expect(screen.getByText("Council floor")).toBeTruthy();
+    expect(screen.getByText("Agent들이 문제를 풀고 있는 현장")).toBeTruthy();
 
-    const analystButton = screen.getByText("Analyst", { exact: true }).closest("button");
-    expect(analystButton).toBeTruthy();
-    fireEvent.click(analystButton!);
+    const analystButton = screen.getByRole("button", { name: /Analyst, 구조화/u });
+    fireEvent.click(analystButton);
 
     await waitFor(() => {
       expect(screen.getByText("Analyst details")).toBeTruthy();
       expect(screen.getByText("Execution phases")).toBeTruthy();
     });
 
-    const relationshipButton = screen.getByRole("button", { name: /관계 상세 보기/u });
+    const relationshipButton = screen.getByRole("button", { name: /claim claim_/i });
     fireEvent.click(relationshipButton);
     expect(screen.getByText("Selected relationship")).toBeTruthy();
     expect(screen.getByText(/실패 조건:/u)).toBeTruthy();
