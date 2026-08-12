@@ -1,0 +1,25 @@
+{
+  "id": "EC-06",
+  "title": "새 AI MVP의 문제 적합성",
+  "phase2": false,
+  "scenario": {
+    "id": "ai-mvp-problem-fit",
+    "title": "새 AI MVP 아이디어의 문제 적합성 검증",
+    "problem": "새로운 AI MVP 아이디어가 실제 사용자 문제를 해결하는가?",
+    "context": "구체적 사용자, 현재 대안, 문제 빈도와 지불 의향 데이터는 제공되지 않았다.",
+    "goals": ["solution보다 문제 강도를 먼저 검증한다", "가장 싼 반증 실험을 설계한다"],
+    "constraints": ["AI 사용 자체를 가치로 간주하지 않는다", "시장 규모를 근거 없이 단정하지 않는다"],
+    "knownFacts": ["검토 대상은 새로운 AI MVP 아이디어다"],
+    "assumptions": ["사용자에게 반복적이고 중요한 문제가 존재한다", "AI가 현재 대안보다 나을 수 있다"],
+    "expectedOutput": "문제 가설, 반증 test, MVP 범위, 중단 조건",
+    "budget": { "maxClaims": 8, "maxRebuttals": 3, "maxInputTokens": 8192, "maxOutputTokens": 2048, "timeoutMs": 180000 }
+  },
+  "rubric": {
+    "mustFindRisks": ["문제 빈도", "현재 대안", "switching cost", "AI 오류 비용", "지불 의향"],
+    "forbiddenAssertions": ["근거 없는 시장 규모", "AI 도입이 자동으로 개선된다는 단정"],
+    "minimumClaimCount": 2,
+    "minimumRebuttalCount": 1,
+    "requiredRebuttalFields": ["strongestCounterargument", "failureScenario", "missingEvidence", "disconfirmingTest"],
+    "allowedConclusions": ["문제 인터뷰 우선", "concierge MVP", "제한적 prototype", "아이디어 중단"]
+  }
+}

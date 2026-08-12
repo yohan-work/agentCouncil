@@ -1,0 +1,25 @@
+{
+  "id": "EC-01",
+  "title": "교육회사 내부 협업 서비스 자체 구축",
+  "phase2": true,
+  "scenario": {
+    "id": "slack-build-vs-buy",
+    "title": "Slack/Jandi 대체 내부 협업 서비스 구축 결정",
+    "problem": "교육회사가 Slack이나 Jandi 대신 사용할 내부 협업 서비스를 자체 구축해야 하는가?",
+    "context": "현재 회사 규모, 사용자 수, 기존 계약 비용, 개발·운영 인력과 보안 요구는 제공되지 않았다.",
+    "goals": ["합리적인 build/buy 결정을 내린다", "숨은 운영 비용과 위험을 드러낸다"],
+    "constraints": ["출처 없는 가격이나 조직 정보를 사실로 단정하지 않는다", "결정에 필요한 추가 정보를 명시한다"],
+    "knownFacts": ["결정 대상은 기존 협업 SaaS를 대체할 내부 서비스다"],
+    "assumptions": ["자체 구축이 비용 또는 업무 적합성을 개선할 수 있다는 가설이 있다"],
+    "expectedOutput": "조건과 근거가 드러난 권고, 반례, 다음 검증 실험",
+    "budget": { "maxClaims": 8, "maxRebuttals": 3, "maxInputTokens": 8192, "maxOutputTokens": 2048, "timeoutMs": 180000 }
+  },
+  "rubric": {
+    "mustFindRisks": ["총소유비용", "운영 인력", "보안과 감사", "migration", "기회비용"],
+    "forbiddenAssertions": ["입력에 없는 SaaS 가격 확정", "입력에 없는 회사 규모 확정", "근거 없는 규제 준수 확정"],
+    "minimumClaimCount": 2,
+    "minimumRebuttalCount": 1,
+    "requiredRebuttalFields": ["strongestCounterargument", "failureScenario", "missingEvidence", "disconfirmingTest"],
+    "allowedConclusions": ["기존 SaaS 유지", "조건부 자체 구축", "제한적 내부 확장", "추가 정보 전 결정 보류"]
+  }
+}

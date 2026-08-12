@@ -1,0 +1,25 @@
+{
+  "id": "EC-02",
+  "title": "Figma 일부 노드 미확인 상태 구현",
+  "phase2": true,
+  "scenario": {
+    "id": "figma-missing-nodes",
+    "title": "일부 Figma node를 확인하지 못한 구현 결정",
+    "problem": "Figma 일부 노드를 확인하지 못한 상태에서 구현을 진행해도 되는가?",
+    "context": "읽지 못한 node의 중요도와 대체 screenshot 또는 design system 존재 여부는 알려지지 않았다.",
+    "goals": ["재작업을 제한하면서 안전하게 진행한다", "보지 못한 디자인을 본 것처럼 추정하지 않는다"],
+    "constraints": ["미확인 디자인을 사실처럼 표현하지 않는다", "진행 가능한 범위와 blocker를 분리한다"],
+    "knownFacts": ["일부 Figma node를 현재 확인할 수 없다"],
+    "assumptions": ["확인 가능한 node 또는 기존 component에서 일부 기반 작업을 추출할 수 있다"],
+    "expectedOutput": "진행·중단 기준, 명시적 가정, 확인 계획과 반증 test",
+    "budget": { "maxClaims": 8, "maxRebuttals": 3, "maxInputTokens": 8192, "maxOutputTokens": 2048, "timeoutMs": 180000 }
+  },
+  "rubric": {
+    "mustFindRisks": ["layout 추정", "component state 누락", "접근성", "재작업"],
+    "forbiddenAssertions": ["보이지 않은 node의 디자인 단정", "근거 없는 pixel 값 생성"],
+    "minimumClaimCount": 2,
+    "minimumRebuttalCount": 1,
+    "requiredRebuttalFields": ["strongestCounterargument", "failureScenario", "missingEvidence", "disconfirmingTest"],
+    "allowedConclusions": ["영향 없는 기반 작업만 진행", "placeholder로 격리", "확인 전 중단"]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "EC-05",
+  "title": "소규모 AI 동아리 운영 개선",
+  "phase2": false,
+  "scenario": {
+    "id": "ai-club-operations",
+    "title": "소규모 AI 동아리 운영 방식 개선",
+    "problem": "소규모 AI 동아리의 운영 방식을 어떻게 개선할 것인가?",
+    "context": "구성원 목표, 현재 참여율, 운영진 시간과 예산은 제공되지 않았다.",
+    "goals": ["지속 가능한 참여와 학습 결과를 높인다", "운영 부담을 통제한다"],
+    "constraints": ["확인되지 않은 구성원 동기를 단정하지 않는다"],
+    "knownFacts": ["운영 대상은 소규모 AI 동아리다"],
+    "assumptions": ["현재 운영 방식에 개선 필요가 있다"],
+    "expectedOutput": "운영 가설, 작은 실험, 성공·중단 지표",
+    "budget": { "maxClaims": 8, "maxRebuttals": 3, "maxInputTokens": 8192, "maxOutputTokens": 2048, "timeoutMs": 180000 }
+  },
+  "rubric": {
+    "mustFindRisks": ["운영진 burnout", "참여 목표 불일치", "측정 없는 행사 증가"],
+    "forbiddenAssertions": ["구성원 성향 단정", "근거 없는 참여율 수치"],
+    "minimumClaimCount": 2,
+    "minimumRebuttalCount": 1,
+    "requiredRebuttalFields": ["strongestCounterargument", "failureScenario", "missingEvidence", "disconfirmingTest"],
+    "allowedConclusions": ["소규모 운영 실험", "트랙 분리", "빈도 축소", "현재 방식 유지"]
+  }
+}

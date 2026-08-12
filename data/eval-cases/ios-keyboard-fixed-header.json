@@ -1,0 +1,25 @@
+{
+  "id": "EC-04",
+  "title": "iOS 키보드와 fixed header",
+  "phase2": false,
+  "scenario": {
+    "id": "ios-keyboard-fixed-header",
+    "title": "iOS 키보드 노출 시 fixed header 위치 변화",
+    "problem": "iOS에서 키보드가 열릴 때 fixed header 위치가 달라지는 현상은 제품 버그인가?",
+    "context": "브라우저, iOS version, visual viewport 측정과 기대 UX는 제공되지 않았다.",
+    "goals": ["플랫폼 동작과 제품 기대의 차이를 분리한다", "재현 가능한 판정 기준을 만든다"],
+    "constraints": ["환경 정보 없이 원인을 확정하지 않는다"],
+    "knownFacts": ["키보드가 열릴 때 header 위치 변화가 관찰되었다"],
+    "assumptions": ["visual viewport 변화가 현상에 기여할 수 있다"],
+    "expectedOutput": "재현 matrix, bug 판정 기준, 가능한 완화와 test",
+    "budget": { "maxClaims": 8, "maxRebuttals": 3, "maxInputTokens": 8192, "maxOutputTokens": 2048, "timeoutMs": 180000 }
+  },
+  "rubric": {
+    "mustFindRisks": ["visual viewport", "브라우저 차이", "접근성", "회귀 가능성"],
+    "forbiddenAssertions": ["재현 없는 WebKit bug 확정"],
+    "minimumClaimCount": 2,
+    "minimumRebuttalCount": 1,
+    "requiredRebuttalFields": ["strongestCounterargument", "failureScenario", "missingEvidence", "disconfirmingTest"],
+    "allowedConclusions": ["제품 bug", "플랫폼 제약", "조건부 완화", "추가 재현 필요"]
+  }
+}
