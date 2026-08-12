@@ -73,3 +73,20 @@ pnpm run eval --provider ollama
 - database: `.agent-council/agent-council.db`
 - artifacts: `artifacts/runs/<run-id>.json`
 - 외부 유료 API, UI, Persona Panel, 전체 6-Agent Council은 Phase 0~2에서 제외
+
+## Phase 3 — 로컬 Run detail 시각화
+
+- `apps/web`에 React + Vite 기반 localhost viewer를 추가한다.
+- Vite dev middleware가 `artifacts/runs/*.json`을 읽어 `GET /api/runs`, `GET /api/runs/:runId`로 제공한다.
+- 브라우저는 `canonicalRunArtifact`만 사용해 Run summary, 5단계 execution timeline, 선택 단계 상세 패널을 렌더링한다.
+- Claim → Rebuttal → Revision 연결과 before/after를 카드 기반 lineage로 표시한다. DB 직접 조회, 모델 호출, artifact 편집은 하지 않는다.
+- 완료 기준: mock 또는 live artifact 하나로 localhost 화면이 열리고, 모든 stage 선택과 lineage 탐색이 가능하며 `refer/`가 API/build 입력에 포함되지 않는다.
+
+실행:
+
+```bash
+pnpm web:build
+pnpm dev
+```
+
+기본 브라우저 주소는 `http://127.0.0.1:5173`이다.

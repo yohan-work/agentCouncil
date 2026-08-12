@@ -68,6 +68,26 @@ pnpm run council replay --run <run-id>
 pnpm run council replay --artifact artifacts/runs/<run-id>.json
 ```
 
+## 로컬 웹 시각화
+
+실행 결과를 브라우저에서 확인하려면 먼저 Run을 생성한 뒤 웹 앱을 실행합니다.
+
+```bash
+pnpm run council run \
+  --provider ollama \
+  --scenario data/eval-cases/slack-build-vs-buy.json
+pnpm dev
+```
+
+브라우저에서 [http://127.0.0.1:5173](http://127.0.0.1:5173)을 열면 `artifacts/runs/`의 canonical JSON을 읽어 다음을 확인할 수 있습니다.
+
+- Run 목록과 provider/model/status/latency/token summary
+- Input normalization → Analyst → Claim normalization → Falsifier → Revision timeline
+- Claim → Rebuttal → Revision lineage
+- before/after 변경, 실패 원인, retry attempt, raw/validated output
+
+웹 앱은 모델을 직접 호출하지 않고 기존 artifact를 읽기 전용으로 시각화합니다. 결과가 없으면 먼저 CLI `run`을 실행해야 하며, Ollama가 꺼져 있어도 이미 생성된 artifact는 열 수 있습니다.
+
 ## 문서
 
 - [프로젝트 구축 요청](docs/phase-01.md)
