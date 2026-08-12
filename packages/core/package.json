@@ -1,0 +1,14 @@
+{
+  "name": "@agent-council/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@agent-council/agents": "workspace:*",
+    "@agent-council/database": "workspace:*",
+    "@agent-council/providers": "workspace:*",
+    "@agent-council/shared": "workspace:*",
+    "zod": "^4.3.6"
+  }
+}
