@@ -1,0 +1,20 @@
+:root {
+  --scene-paper: #f4e6c9;
+  --scene-floor: #bd7f4d;
+  --scene-ink: #241a20;
+  --scene-muted: #725b5a;
+  --scene-blue: #2568bd;
+  --scene-blue-soft: #dcecff;
+  --scene-red: #b6423f;
+  --scene-red-soft: #ffe0d7;
+  --scene-green: #39805f;
+  --scene-purple: #7751a6;
+  --scene-yellow: #dcae36;
+  --scene-shadow: rgba(43, 26, 24, 0.25);
+  --scene-line: rgba(54, 36, 37, 0.28);
+  --scene-grid: 4px;
+  --scene-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --scene-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --scene-duration-fast: 150ms;
+  --scene-duration-normal: 240ms;
+}
