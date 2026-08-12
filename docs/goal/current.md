@@ -1,34 +1,37 @@
 # 현재 목표
 
 - 상태: 완료
-- 마지막 갱신: 2026-08-12 15:16 KST
-- 현재 작업 단위: Agent Council Phase 3 로컬 Run detail 시각화
+- 마지막 갱신: 2026-08-12 16:34 KST
+- 현재 작업 단위: Agent Council Phase 4 Agent 협업 보드 시각화
 
 ## 목표와 성공 기준
 
-- 목표: 기존 canonical run artifact를 localhost에서 읽기 전용으로 탐색할 수 있는 실행 흐름 시각화를 제공한다.
-- 성공 기준: React/Vite 화면에서 Run summary, 5단계 timeline, 선택 단계 상세, Claim → Rebuttal → Revision lineage를 확인하고, artifact API와 build/test/browser smoke가 통과한다.
+- 목표: 기존 timeline-first Run detail을 중앙 문제와 실제 실행 Agent의 역할·관계가 먼저 보이는 읽기 전용 협업 보드로 전환한다.
+- 성공 기준: canonical artifact 하나로 중앙 문제, Analyst/Falsifier 카드, `Claim → Rebuttal → Revision` 관계, Agent/관계 Inspector, 접힌 실행 상세를 확인하고 lint/typecheck/test/build/web smoke를 통과한다.
 
 ## 범위와 확정된 결정
 
-- 포함: Phase 0~2 전체 구현, React/Vite `apps/web`, validated artifact API, Run detail timeline, 단계별 상세 패널, Claim lineage, web/unit/integration/browser smoke 검증.
-- 제외: Judge verdict, Persona Panel, 전체 6-agent council, baseline 비교, 실시간 streaming, artifact 편집·재실행, 인증·원격 배포.
-- 결정: `gemma4:e2b`를 기본 모델로 사용하고 concurrency를 1로 고정하며 독립성은 별도 호출과 컨텍스트 격리로 보장한다. 비용은 provider usage에 항상 `estimatedCost: 0`으로 기록한다.
-- 결정: 웹은 React + Vite localhost 서버로 실행하고, 브라우저 데이터 원천은 SQLite가 아닌 `canonicalRunArtifact` JSON으로 제한한다. `packages/shared/src/browser.ts`로 Node crypto 의존성을 브라우저 bundle에서 제외한다.
+- 포함: `AgentBoardModel`, browser-safe Agent metadata, 요약 우선 협업 보드, responsive 양측 Agent 레이아웃, 관계 선택 Inspector, missing-reference 경고, 접힌 Execution details, web/model/browser tests와 문서 갱신.
+- 제외: Judge verdict, Persona Panel, baseline 비교, 실시간 streaming, artifact 편집·재실행, 인증·원격 배포, 아직 실행되지 않은 6-Agent placeholder.
+- 결정: 브라우저의 데이터 원천은 기존 `canonicalRunArtifact`와 API 계약으로 유지한다. Node 전용 `packages/agents` 로더는 import하지 않고 `apps/web/src/agent-metadata.ts`를 사용한다.
+- 결정: 기본 Claim 수는 `parentClaimId === null`인 원 주장만 집계하고, 수정된 자식 Claim은 관계/record로 보존한다.
+- 결정: Agent 카드 클릭은 Agent Inspector, 관계 카드 클릭은 Claim/Rebuttal/Revision Inspector로 분리하며 timeline은 2차 접힘 영역으로 유지한다.
 
 ## 현재 상태
 
-- 완료: `docs/reference-audit.md`, `docs/reference-inventory.csv`, 아키텍처·도메인·평가·구현 계획, 8개 workspace/package, SQLite repository, 중앙 structured-output retry/timeout/cancel, Mock/Ollama provider, CLI, Analyst → Falsifier → Revision 상태 머신, 6개 eval fixture와 테스트를 구현했다.
-- 완료: mock `doctor`/run/eval, 실제 `gemma4:e2b` Ollama `doctor`, Phase 2 3개 live eval(EC-01~03)이 모두 통과했다.
-- 완료: `apps/web`의 React/Vite 화면, `GET /api/runs`, `GET /api/runs/:runId`, 빈 목록·오류 상태, timeline/detail/lineage UI와 web tests를 구현했다.
-- 완료: `pnpm lint`, `pnpm typecheck`, `pnpm test`(22개), `pnpm web:test`(5개), `pnpm build`, `pnpm web:build`, localhost API 및 Playwright browser smoke가 통과했다.
-- 차단 요인 또는 미검증: Judge/Persona Panel, 전체 6-agent council, baseline 비교와 원격 배포는 다음 Phase 범위다.
+- 완료: `apps/web/src/agent-board-model.ts`에서 AgentRun grouping, 역할 요약, 관계 매핑, action count와 missing-reference 경고를 생성한다.
+- 완료: `apps/web/src/App.tsx`와 `apps/web/src/styles.css`를 중앙 문제·양측 Agent·관계 카드·Inspector 중심으로 개편하고 320px~desktop responsive 규칙을 추가했다.
+- 완료: `tests/web/agent-board-model.test.ts`, `tests/web/App.test.tsx`에 grouping, relationship, missing reference, Agent/관계 선택 상호작용을 추가했다.
+- 완료: `docs/visualization.md`, `docs/implementation-plan.md`, `README.md`를 Phase 4 보드 기준으로 갱신했다.
+- 검증됨: `pnpm lint`, `pnpm typecheck`, `pnpm test`(24개), `pnpm web:test`(7개), `pnpm build`, `pnpm web:build`, localhost curl 및 Playwright에서 실제 `gemma4:e2b` 보드·Analyst Inspector 캡처를 통과했다.
+- 미검증: 배포 환경과 전체 6-Agent/Judge/Persona 확장은 다음 Phase 범위다.
 
 ## 마지막 체크포인트
 
-- Handoff: [2026-08-12-1516-agent-council-phase-03-visualization](../handoff/2026-08-12-1516-agent-council-phase-03-visualization.md)
-- Socratic: [2026-08-12-1516-agent-council-phase-03-visualization](../socratic/2026-08-12-1516-agent-council-phase-03-visualization.md)
+- Handoff: [2026-08-12-1634-agent-council-phase-04-agent-board](../handoff/2026-08-12-1634-agent-council-phase-04-agent-board.md)
+- Socratic: [2026-08-12-1634-agent-council-phase-04-agent-board](../socratic/2026-08-12-1634-agent-council-phase-04-agent-board.md)
 
 ## 재개 지점
 
-1. 다음 Phase에서 Judge/Persona/baseline을 추가할 경우 `docs/visualization.md`의 read-only artifact 경계를 유지하고, 기존 canonical artifact schema를 먼저 확장한다.
+1. `docs/visualization.md`와 최신 Handoff를 읽고, 다음 Phase에서 Judge/Persona/baseline을 canonical artifact schema와 API 경계 안에 추가한다.
+2. 새 artifact record가 추가되면 `buildAgentBoardModel`의 grouping·관계·집계 테스트와 Playwright smoke를 먼저 확장한다.

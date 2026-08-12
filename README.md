@@ -82,9 +82,10 @@ pnpm dev
 브라우저에서 [http://127.0.0.1:5173](http://127.0.0.1:5173)을 열면 `artifacts/runs/`의 canonical JSON을 읽어 다음을 확인할 수 있습니다.
 
 - Run 목록과 provider/model/status/latency/token summary
-- Input normalization → Analyst → Claim normalization → Falsifier → Revision timeline
-- Claim → Rebuttal → Revision lineage
-- before/after 변경, 실패 원인, retry attempt, raw/validated output
+- 중앙 문제와 Analyst(구조화·수정) / Falsifier(반증·공격) Agent 협업 보드
+- Claim → Rebuttal → Revision 관계 카드와 missing-reference 경고
+- Agent 또는 관계 선택 Inspector의 역할, phase, before/after, 실패 원인, retry attempt, raw/validated output
+- 접힌 Execution details의 5단계 timeline과 trace event
 
 웹 앱은 모델을 직접 호출하지 않고 기존 artifact를 읽기 전용으로 시각화합니다. 결과가 없으면 먼저 CLI `run`을 실행해야 하며, Ollama가 꺼져 있어도 이미 생성된 artifact는 열 수 있습니다.
 

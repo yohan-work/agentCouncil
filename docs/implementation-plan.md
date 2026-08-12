@@ -90,3 +90,25 @@ pnpm dev
 ```
 
 기본 브라우저 주소는 `http://127.0.0.1:5173`이다.
+
+## Phase 4 — Agent 협업 보드 시각화
+
+- 기존 timeline-first 화면을 `중앙 문제 + Analyst(좌) + Falsifier(우)` 협업 보드로 재배치한다.
+- `apps/web/src/agent-board-model.ts`에서 canonical artifact를 browser-safe `AgentBoardModel`로 변환한다. AgentRun은 `agentId`별로 묶고 Analyst의 analysis/revision phase는 하나의 Agent 카드 안에 보존한다.
+- 첫 화면은 summary-first로 구성한다. 역할, 한 줄 요약, Claim/반박/수정 수, phase chip을 먼저 보여주고 raw/validated output과 usage는 선택 Inspector에서만 펼친다.
+- 중앙 관계 카드는 `Claim → Rebuttal → Revision`을 한 줄로 보여준다. 연결된 record가 없거나 참조가 끊긴 경우도 버리지 않고 빈 칸·경고로 표시한다.
+- Agent 카드 선택은 오른쪽(하단 responsive) Inspector로 역할, non-goal, 실행 phase, 상태와 output을 연다. 관계 카드 선택은 Claim, strongest counterargument, failure scenario, before/after와 수정 이유를 연다.
+- 기존 5단계 timeline과 trace는 `Execution details` 접힘 영역으로 유지해 상세 실행 순서와 board 가독성을 동시에 보장한다.
+- UI는 현재 실행된 Agent만 기본 표시하고, 향후 미실행 6-Agent 역할을 빈 placeholder로 만들지 않는다. 브라우저 bundle에서는 Node 전용 prompt loader를 import하지 않는다.
+- 완료 기준: mock/live artifact 하나로 중앙 문제와 두 Agent의 역할·관계가 첫 화면에서 읽히고, Agent/관계 선택 Inspector, missing-reference 경고, 접힌 실행 상세, responsive viewport, model/UI/browser smoke가 통과한다.
+
+검증:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm web:test
+pnpm build
+pnpm web:build
+```
