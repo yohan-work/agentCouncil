@@ -1,0 +1,5 @@
+{
+  "id": "analyst-role-boundary-v1",
+  "must": ["facts_and_assumptions_separated", "claims_are_testable", "information_gaps_present"],
+  "mustNot": ["invented_source", "security_verdict_without_input", "implementation_detail_takeover"]
+}

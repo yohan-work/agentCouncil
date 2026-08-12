@@ -1,0 +1,5 @@
+{
+  "id": "falsifier-quality-v1",
+  "must": ["valid_claim_id", "strong_counterexample", "failure_scenario", "observable_disconfirming_test"],
+  "mustNot": ["generic_disagreement", "invented_claim", "final_verdict"]
+}

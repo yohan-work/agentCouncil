@@ -1,0 +1,16 @@
+{
+  "problemFrame": "자체 구축 여부는 기능 개발보다 총소유비용과 지속 운영 역량을 비교하는 결정이다.",
+  "claims": [
+    {
+      "text": "운영 인력과 장기 유지보수 예산이 확인되기 전에는 전체 협업 서비스 자체 구축을 승인하면 안 된다.",
+      "claimType": "recommendation",
+      "evidenceRefs": [],
+      "assumptions": ["현재 운영 인력과 장기 예산이 확인되지 않았다."],
+      "confidence": 0.82,
+      "importance": "critical",
+      "rationale": "개발 완료 이후에도 보안, 장애 대응, 데이터 보존과 사용자 지원 비용이 계속 발생한다."
+    }
+  ],
+  "recommendation": "현재 SaaS 유지와 제한된 내부 확장안을 먼저 비교한다.",
+  "informationGaps": ["사용자 수", "현재 SaaS 총비용", "운영 인력", "보안 요구"]
+}
