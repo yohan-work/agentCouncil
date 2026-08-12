@@ -1,0 +1,43 @@
+{
+  "name": "agent-council",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "reference:scan": "node scripts/reference-inventory.mjs",
+    "lint": "eslint \"{apps,packages,tests}/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "build": "tsc -p tsconfig.json && tsup apps/cli/src/index.ts --format esm --platform node --target node24 --out-dir dist/cli --external better-sqlite3 --external dotenv",
+    "council": "node --import tsx/esm apps/cli/src/index.ts",
+    "doctor": "node --import tsx/esm apps/cli/src/index.ts doctor",
+    "eval": "node --import tsx/esm apps/cli/src/index.ts eval"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "dotenv": "^17.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.3.0",
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^9.33.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.39.1",
+    "vitest": "^3.2.4",
+    "zod": "^4.3.6"
+  }
+}
